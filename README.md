@@ -2,14 +2,8 @@
 
 ## Descripción
 El **Dashboard de Formalización Laboral** es una plataforma digital diseñada para facilitar la formalización laboral en Colombia, dirigida a trabajadores informales y pequeñas empresas. Esta solución integral simplifica los procesos de registro, gestión de contratos, pagos de seguridad social y educación financiera, promoviendo el cumplimiento normativo y el acceso a derechos laborales.
+![image](https://github.com/user-attachments/assets/6b6c4aaf-78a8-4f02-b73d-0d2a1dd2d829)
 
-La plataforma contribuye al **ODS 8 (Trabajo decente y crecimiento económico)** al reducir la informalidad laboral, mejorar el acceso a la seguridad social, fomentar el crecimiento de pequeñas empresas y apoyar el desarrollo económico del país.
-
-## Impacto Esperado
-- **Reducción de la informalidad laboral**: Simplifica el acceso al mercado formal para trabajadores y empleadores.
-- **Mayor acceso a la seguridad social**: Automatiza el cálculo y pago de contribuciones, garantizando protección social.
-- **Crecimiento de pequeñas empresas**: Facilita la gestión administrativa, permitiendo a las microempresas centrarse en su desarrollo.
-- **Contribución al desarrollo económico**: Promueve la formalización como motor de crecimiento sostenible.
 
 ## Funcionalidades Principales
 La plataforma se estructura en **módulos clave** que abordan las necesidades de formalización laboral:
@@ -38,7 +32,7 @@ La plataforma se estructura en **módulos clave** que abordan las necesidades de
 - **Frontend**: React con Tailwind CSS para una interfaz moderna y responsiva.  
 - **Backend**: Node.js con Express para la gestión de APIs y procesos automatizados.  
 - **Base de Datos**: PostgreSQL para el almacenamiento seguro de datos de usuarios y transacciones.  
-- **Integraciones**: APIs de PILA, DIAN y sistemas de firma digital (e.g., DocuSign).  
+- **Integraciones**: Supabase  
 - **Seguridad**: Autenticación multifactor y cifrado de datos sensibles.  
 
 ## Instalación
@@ -52,14 +46,12 @@ La plataforma se estructura en **módulos clave** que abordan las necesidades de
    ```
 3. Configura las variables de entorno en un archivo `.env`:  
    ```env
-   DB_HOST=localhost
-   DB_USER=tu_usuario
-   DB_PASS=tu_contraseña
-   API_PILA_KEY=tu_clave_api
+   
+   your password and api key supabase
    ```
 4. Inicia el servidor:  
    ```bash
-   npm start
+   npm run dev
    ```
 
 ## Uso
