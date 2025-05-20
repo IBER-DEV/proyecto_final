@@ -62,13 +62,13 @@ export function Auth() {
   };
 
   const validatePassword = (password: string): boolean => {
-    const isValid = password.length >= 8;
+    const isValid = password.length >= 6;
     
     setFieldErrors(prev => ({
       ...prev,
       password: {
         error: !isValid,
-        message: isValid ? '' : 'La contraseña debe tener al menos 8 caracteres'
+        message: isValid ? '' : 'La contraseña debe tener al menos 6 caracteres'
       }
     }));
     

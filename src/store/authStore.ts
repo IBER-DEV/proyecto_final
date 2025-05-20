@@ -12,19 +12,19 @@ interface AuthState {
 }
 
 // Función auxiliar para obtener el perfil del usuario
-const fetchUserProfile = async (userId: string) => {
+const fetchUserProfile = async (user: { id: string; email: string }) => {
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
     .single();
 
   if (error) throw error;
 
   return profile
     ? {
-        id: userId,
-        email: profile.email,
+        id: user.id,
+        email: user.email, // ahora tomamos el email del auth.user
         full_name: profile.full_name,
         role: profile.role,
         verified: profile.verified,
@@ -42,7 +42,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
+        const profile = await fetchUserProfile({
+          id: session.user.id,
+          email: session.user.email!,
+        });
         if (profile) {
           set({ user: profile });
         }
@@ -56,7 +59,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
 
         if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
+          const profile = await fetchUserProfile({
+            id: session.user.id,
+            email: session.user.email!,
+          });
           if (profile) {
             set({ user: profile, loading: false });
           }
@@ -76,7 +82,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (authError) throw authError;
 
       if (authData.user) {
-        const profile = await fetchUserProfile(authData.user.id);
+        const profile = await fetchUserProfile({
+          id: authData.user.id,
+          email: authData.user.email!,
+        });
         if (profile) {
           set({ user: profile });
         }
@@ -101,7 +110,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([{ user_id: authData.user.id, full_name: fullName, role }]);
+          .insert([{
+            user_id: authData.user.id,
+            full_name: fullName,
+            role,
+            verified: false,
+            created_at: new Date().toISOString(),
+          }]);
 
         if (profileError) throw profileError;
 

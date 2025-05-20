@@ -35,46 +35,48 @@ export function Dashboard() {
           .select('id')
           .eq('user_id', user?.id)
           .single();
-
+  
         if (!profile) return;
-
-        // Fetch contracts
-        const contractsQuery = supabase
+  
+        const contractFilter = isEmployer
+          ? { column: 'employer_id', value: profile.id }
+          : { column: 'worker_id', value: profile.id };
+  
+        const contractsPromise = supabase
           .from('contracts')
           .select('*')
+          .eq(contractFilter.column, contractFilter.value)
           .order('created_at', { ascending: false });
-
-        if (isEmployer) {
-          contractsQuery.eq('employer_id', profile.id);
-        } else {
-          contractsQuery.eq('worker_id', profile.id);
-        }
-
-        const { data: contracts = [] } = await contractsQuery;
-
-        // Fetch payments
-        const { data: payments = [] } = await supabase
+  
+        const paymentsPromise = supabase
           .from('payments')
           .select('*')
-          .in('contract_id', contracts.map(c => c.id))
           .order('payment_date', { ascending: false });
-
-        // Calculate stats
+  
+        const [contractsRes, paymentsRes] = await Promise.all([
+          contractsPromise,
+          paymentsPromise
+        ]);
+  
+        const contracts = contractsRes.data || [];
+        const relatedContractIds = contracts.map(c => c.id);
+        const payments = (paymentsRes.data || []).filter(p => relatedContractIds.includes(p.contract_id));
+  
         const activeContracts = contracts.filter(c => c.status === 'active').length;
-        const uniqueCounterparties = new Set(contracts.map(c => 
-          isEmployer ? c.worker_id : c.employer_id
-        )).size;
+        const counterparties = new Set(contracts.map(c => isEmployer ? c.worker_id : c.employer_id)).size;
         const pendingPayments = payments.filter(p => p.status === 'pending').length;
-        
-        // Calculate monthly earnings
-        const currentMonth = new Date().getMonth();
+  
+        const now = new Date();
         const monthlyEarnings = payments
-          .filter(p => new Date(p.payment_date).getMonth() === currentMonth)
+          .filter(p => {
+            const date = new Date(p.payment_date);
+            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+          })
           .reduce((sum, p) => sum + (isEmployer ? -p.amount : p.net_amount), 0);
-
+  
         setStats({
           activeContracts,
-          totalCounterparties: uniqueCounterparties,
+          totalCounterparties: counterparties,
           pendingPayments,
           monthlyEarnings,
           recentContracts: contracts.slice(0, 5),
@@ -86,11 +88,12 @@ export function Dashboard() {
         setLoading(false);
       }
     };
-
+  
     if (user) {
       fetchDashboardData();
     }
   }, [user, isEmployer]);
+  
 
   if (loading) {
     return (

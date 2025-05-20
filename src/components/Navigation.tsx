@@ -15,7 +15,7 @@ export function Navigation() {
     { name: 'Payments', href: '/payments', icon: CreditCard },
     { name: 'Educación', href: '/education', icon: GraduationCap },
     { name: 'Reports', href: '/reports', icon: FileText },
-    // Quitamos 'Notifications' del arreglo porque lo vamos a renderizar directamente
+
   ];
 
   const handleSignOut = async () => {

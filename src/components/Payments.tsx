@@ -386,6 +386,22 @@ export function Payments() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+
+  useEffect(() => {
+    const filtered = payments.filter((payment) =>
+      payment.contract_id.toLowerCase().includes(searchTerm.toLowerCase())
+      || payment.id.toLowerCase().includes(searchTerm.toLowerCase())
+      || payment.payment_date.toLowerCase().includes(searchTerm.toLowerCase())
+      || payment.payment_method.toLowerCase().includes(searchTerm.toLowerCase())
+      || payment.status.toLowerCase().includes(searchTerm.toLowerCase())
+      || payment.amount.toString().includes(searchTerm)
+      || payment.net_amount.toString().includes(searchTerm)
+      || payment.base_salary.toString().includes(searchTerm)
+    );
+    setFilteredPayments(filtered);
+  }, [searchTerm, payments]);
 
   const handleStatusUpdate = async (
     payment: Payment,
@@ -433,6 +449,7 @@ export function Payments() {
 
         if (paymentsError) throw paymentsError;
         setPayments(paymentsData || []);
+        setFilteredPayments(paymentsData || []);
       } catch (err: any) {
         console.error('Error fetching data:', err);
         setError(err.message || 'Failed to load data');
@@ -478,6 +495,7 @@ export function Payments() {
       if (paymentError) throw paymentError;
 
       setPayments([...payments, newPayment]);
+      setFilteredPayments([...filteredPayments, newPayment]);
       setShowForm(false);
     } catch (err: any) {
       console.error('Error creating payment:', err);
@@ -543,6 +561,8 @@ export function Payments() {
                   type="text"
                   className="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   placeholder="Search payments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -555,16 +575,18 @@ export function Payments() {
             </button>
           </div>
 
-          {payments.length > 0 ? (
-            <PaymentList payments={payments} onStatusUpdate={handleStatusUpdate} />
+          {filteredPayments.length > 0 ? (
+            <PaymentList payments={filteredPayments} onStatusUpdate={handleStatusUpdate} />
           ) : (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <CreditCard className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">No payments</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {isEmployer
-                  ? "You haven't made any payments yet."
-                  : "You haven't received any payments yet."}
+                {searchTerm ? 
+                  "No payments match your search criteria." : 
+                  (isEmployer
+                    ? "You haven't made any payments yet."
+                    : "You haven't received any payments yet.")}
               </p>
               {isEmployer && (
                 <div className="mt-6">

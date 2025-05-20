@@ -266,8 +266,8 @@ function ContractList({
                     <ContractStatusActions
                       contract={contract}
                       userRole={user?.role || 'worker'}
-                      onStatusUpdate={(newStatus) =>
-                        onStatusUpdate(contract, newStatus)
+                      onStatusUpdate={(newStatus: string) =>
+                        onStatusUpdate(contract, newStatus as ContractStatus)
                       }
                     />
                   </div>
@@ -302,6 +302,17 @@ export function Contracts() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
+
+  // Efecto para filtrar contratos según el término de búsqueda
+  useEffect(() => {
+    const filtered = contracts.filter((contract) =>
+      contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (contract.description && contract.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredContracts(filtered);
+  }, [searchTerm, contracts]);
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -327,6 +338,7 @@ export function Contracts() {
         const { data, error: contractsError } = await query;
         if (contractsError) throw contractsError;
         setContracts(data || []);
+        setFilteredContracts(data || []);  // Inicializar también los contratos filtrados
       } catch (err) {
         console.error('Error fetching contracts:', err);
         setError('Failed to load contracts');
@@ -376,7 +388,7 @@ export function Contracts() {
         .from('contracts')
         .insert([
           {
-            employer_id: employerProfile.id,
+            employer_id: employerProfile?.id || null,
             worker_id: workerProfile.profile_id,
             title: data.title,
             description: data.description,
@@ -397,6 +409,7 @@ export function Contracts() {
       if (contractError) throw contractError;
 
       setContracts([...contracts, newContract]);
+      setFilteredContracts([...filteredContracts, newContract]);  // Actualizar también los contratos filtrados
       setShowForm(false);
     } catch (err: any) {
       console.error('Error creating contract:', err);
@@ -415,9 +428,15 @@ export function Contracts() {
         newStatus
       );
 
-      setContracts(
-        contracts.map((c) => (c.id === contract.id ? updatedContract : c))
+      const updatedContracts = contracts.map((c) => 
+        c.id === contract.id ? updatedContract : c
       );
+      setContracts(updatedContracts);
+      
+      // Actualizar también los contratos filtrados
+      setFilteredContracts(filteredContracts.map((c) => 
+        c.id === contract.id ? updatedContract : c
+      ));
     } catch (err: any) {
       console.error('Error updating contract status:', err);
       setError(err.message || 'Failed to update contract status');
@@ -481,6 +500,8 @@ export function Contracts() {
                   type="text"
                   className="block w-full rounded-md border-gray-300 pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   placeholder="Search contracts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -493,9 +514,9 @@ export function Contracts() {
             </button>
           </div>
 
-          {contracts.length > 0 ? (
+          {filteredContracts.length > 0 ? (
             <ContractList
-              contracts={contracts}
+              contracts={filteredContracts}
               onStatusUpdate={handleStatusUpdate}
             />
           ) : (
@@ -503,9 +524,11 @@ export function Contracts() {
               <FileText className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">No contracts</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {isEmployer
-                  ? "You haven't created any contracts yet."
-                  : "You haven't received any contracts yet."}
+                {searchTerm ? 
+                  "No contracts match your search criteria." : 
+                  (isEmployer
+                    ? "You haven't created any contracts yet."
+                    : "You haven't received any contracts yet.")}
               </p>
               {isEmployer && (
                 <div className="mt-6">
